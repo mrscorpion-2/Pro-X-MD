@@ -1,0 +1,26 @@
+pkg update && pkg update
+pkg install ffmpeg
+pkg install nodejs
+pkg install bash
+pkg install yarn
+pkg install git
+
+termux-setup-storage
+allow permission 👈
+
+1st method
+cd /sdcard/toxicupdate2 && yarn install
+
+2nd method
+cd /sdcard/toxicupdate2
+yarn install
+npm start
+
+
+
+Connected successful✅
+
+next time connect
+always use this commander👇
+
+cd /sdcard/toxicupdate2 && npm start

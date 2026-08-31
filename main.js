@@ -1,32 +1,39 @@
-/**
-   * Base By Mr Legend
-   * Create By Lwazi
-   * Contact Me on wa.me/27736324314
-   *Follow WhatsApp Channel
-   * https://whatsapp.com/channel/0029VbDK7drI1rcoEQNE1K3S
-   * Follow YouTube Channel
-   https://www.youtube.com/@lwazi
-**/
+// BEFORE (your current code breaks on Render):
+// const number = await question("Enter your number:")
 
-const {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  fetchLatestWaWebVersion,
-  DisconnectReason,
-  Browsers,
-} = require('@whiskeysockets/baileys');
-const pino = require('pino');
-const fs = require('fs');
-const path = require('path');
-const readline = require('readline');
-const { Boom } = require('@hapi/boom');
-const config = require('./config');
-const { reply } = require('./menu');
-const { normalizeMessageContent } = require('@whiskeysockets/baileys');
-const { reportError, startSpecialNumbersAutoRefresh, isSpecialNumber } = require('./reports');
+// AFTER - FIX FOR RENDER:
+const usePairingCode = true; // or false if you use QR
+let phoneNumber = process.env.PHONE_NUMBER || "27736324314";
 
-const SESSION_FOLDER = path.resolve('./session');
-const logger = pino({ level: 'silent' });
+async function startBot() {
+    const { state, saveCreds } = await useMultiFileAuthState('session')
+    
+    // Fix 1: Don't use readline on Render
+    if (!phoneNumber && process.stdin.isTTY) {
+        // Only ask if running on your own PC
+        const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+        phoneNumber = await new Promise((resolve) => {
+            rl.question("Enter your WhatsApp number with country code: '+27736324314', (ans) => {
+                rl.close()
+                resolve(ans)
+            })
+        })
+    }
+
+    const sock = makeWASocket({
+        auth: state,
+        printQRInTerminal: !usePairingCode
+    })
+
+    if (usePairingCode && !sock.authState.creds.registered) {
+        if (!phoneNumber) {
+            console.log("Add PHONE_NUMBER in Render Environment Variables!")
+            phoneNumber = process.env.PHONE_NUMBER
+        }
+        const code = await sock.requestPairingCode(phoneNumber.trim())
+        console.log(`Pairing Code: ${code}`)
+    }
+    }
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const question = (text) => new Promise((resolve) => rl.question(text, resolve));
